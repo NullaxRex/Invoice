@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#ffffff">
+<title>Collision IQ — Shop Estimator</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#ffffff;--bg2:#f5f5f5;--bg3:#eeeeee;
+  --text:#111111;--text2:#666666;--text3:#999999;
+  --border:#e0e0e0;--border2:#cccccc;
+  --blue:#1a6fb5;--blue-bg:#e8f1fb;--blue-text:#0c447c;
+  --green:#2e7d32;--green-bg:#e8f5e9;--green-text:#1b5e20;
+  --amber:#b45309;--amber-bg:#fef3c7;--amber-text:#78350f;
+  --red:#c62828;--red-bg:#ffebee;--red-text:#7f0000;
+  --gray-bg:#f0f0f0;--gray-text:#444444;
+  --radius:10px;--radius-sm:7px;
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+    --text:#f2f2f7;--text2:#aeaeb2;--text3:#6e6e73;
+    --border:#3a3a3c;--border2:#48484a;
+    --blue:#4a9eff;--blue-bg:#0a2a4a;--blue-text:#93c5fd;
+    --green:#4ade80;--green-bg:#052e16;--green-text:#86efac;
+    --amber:#fbbf24;--amber-bg:#2d1f00;--amber-text:#fde68a;
+    --red:#f87171;--red-bg:#2d0000;--red-text:#fca5a5;
+    --gray-bg:#3a3a3c;--gray-text:#aeaeb2;
+  }
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:16px;color:var(--text);background:var(--bg2);max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--bg);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100}
+.topbar-back{width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:var(--radius-sm);font-size:22px;color:var(--blue);flex-shrink:0}
+.topbar-back:active{background:var(--bg2)}
+.topbar-title{font-size:17px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar-action{font-size:15px;font-weight:600;color:var(--blue);cursor:pointer;padding:6px 10px;border-radius:var(--radius-sm);white-space:nowrap}
+.topbar-action:active{background:var(--blue-bg)}
+.topbar-action.disabled{color:var(--text3);pointer-events:none}
+.scroll-area{flex:1;overflow-y:auto;padding-bottom:90px}
+.bottomnav{background:var(--bg);border-top:1px solid var(--border);display:flex;padding:8px 0 max(10px,env(safe-area-inset-bottom));position:sticky;bottom:0}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;padding:4px 0;position:relative}
+.bnav-icon{width:26px;height:26px;stroke:var(--text2);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.bnav-item.active .bnav-icon{stroke:var(--blue)}
+.bnav-label{font-size:10px;font-weight:500;color:var(--text2)}
+.bnav-item.active .bnav-label{color:var(--blue)}
+.bnav-dot{width:8px;height:8px;border-radius:50%;background:var(--red);position:absolute;top:0;right:calc(50% - 20px);border:2px solid var(--bg);display:none}
+.section-hdr{font-size:13px;font-weight:600;color:var(--text2);padding:18px 16px 6px;text-transform:uppercase;letter-spacing:.05em}
+.card{background:var(--bg);border-radius:var(--radius);border:1px solid var(--border);margin:0 16px 12px;overflow:hidden}
+.card-pad{padding:14px 16px}
+.row{display:flex;align-items:center;padding:13px 16px;border-bottom:1px solid var(--border);gap:12px;cursor:pointer;background:var(--bg)}
+.row:last-child{border-bottom:none}
+.row:active{background:var(--bg2)}
+.row-main{flex:1;min-width:0}
+.row-title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-sub{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0}
+.chevron{color:var(--text3);font-size:18px;font-weight:300;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px;white-space:nowrap}
+.b-blue{background:var(--blue-bg);color:var(--blue-text)}
+.b-amber{background:var(--amber-bg);color:var(--amber-text)}
+.b-red{background:var(--red-bg);color:var(--red-text)}
+.b-green{background:var(--green-bg);color:var(--green-text)}
+.b-gray{background:var(--gray-bg);color:var(--gray-text)}
+.metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.metric{background:var(--bg);border-radius:var(--radius);padding:16px;border:1px solid var(--border)}
+.metric-label{font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:500}
+.metric-value{font-size:28px;font-weight:700}
+.metric-value.r{color:var(--red)}.metric-value.a{color:var(--amber)}.metric-value.g{color:var(--green)}
+.form-pad{padding:16px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.form-group input,.form-group select,.form-group textarea{width:100%;font-size:16px;padding:12px 14px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);-webkit-appearance:none;appearance:none;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--blue)}
+.form-group textarea{resize:vertical;min-height:80px}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.progress-bar{display:flex;gap:4px;padding:12px 16px 4px}
+.progress-seg{flex:1;height:4px;border-radius:2px;background:var(--border)}
+.progress-seg.done{background:var(--blue)}
+.progress-label{font-size:13px;color:var(--text2);padding:0 16px 14px}
+.btn-full{width:100%;padding:15px;font-size:16px;font-weight:600;border:none;border-radius:var(--radius);cursor:pointer;margin-bottom:10px;font-family:inherit;transition:opacity .15s}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:active{opacity:.8}
+.btn-ghost{background:var(--bg2);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:active{opacity:.7}
+.line-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:10px;align-items:flex-start}
+.line-item:last-child{border-bottom:none}
+.li-fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.li-row{display:flex;gap:7px}
+.li-input{font-size:14px;padding:9px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg);color:var(--text);font-family:inherit;width:100%}
+.li-input:focus{outline:none;border-color:var(--blue)}
+.li-w70{width:70px;flex-shrink:0}
+.li-del{width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--red);cursor:pointer;font-size:20px;flex-shrink:0;background:var(--bg)}
+.li-del:active{background:var(--red-bg)}
+.li-total{font-size:12px;color:var(--text2);margin-top:2px}
+.add-btn{display:flex;align-items:center;justify-content:center;gap:6px;padding:14px 16px;font-size:15px;color:var(--blue);cursor:pointer;font-weight:600;background:var(--bg)}
+.add-btn:active{background:var(--bg2)}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);font-size:15px}
+.total-row:last-child{border-bottom:none;font-size:17px;font-weight:700}
+.total-label{color:var(--text2)}
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:11px 16px;border-bottom:1px solid var(--border);font-size:15px;gap:12px}
+.info-row:last-child{border-bottom:none}
+.info-label{color:var(--text2);flex-shrink:0;font-size:14px}
+.info-val{text-align:right;font-size:14px;word-break:break-word}
+.flag-banner{margin:0 16px 10px;padding:13px 14px;border-radius:var(--radius-sm);border-left:4px solid var(--red);background:var(--red-bg)}
+.flag-banner.warn{background:var(--amber-bg);border-color:var(--amber)}
+.flag-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;color:var(--red-text)}
+.flag-type.warn{color:var(--amber-text)}
+.flag-msg{font-size:13px;color:var(--text)}
+.resolve-row{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg)}
+.resolve-btn{flex:1;padding:11px;font-size:14px;font-weight:600;border-radius:var(--radius-sm);cursor:pointer;text-align:center;border:1px solid var(--border2);background:var(--bg);color:var(--text);font-family:inherit}
+.resolve-btn:active{background:var(--bg2)}
+.search-input{width:100%;font-size:15px;padding:11px 14px;border:1px solid var(--border2);border-radius:var(--radius);background:var(--bg2);color:var(--text);font-family:inherit;-webkit-appearance:none}
+.search-input:focus{outline:none;border-color:var(--blue);background:var(--bg)}
+.empty{text-align:center;padding:3rem 1rem;color:var(--text2);font-size:15px}
+.loading{text-align:center;padding:3rem 1rem;color:var(--text2);font-size:15px}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-wrap{position:sticky;bottom:90px;padding:0 16px 8px;pointer-events:none;z-index:200}
+.toast{background:rgba(30,30,30,.92);color:#fff;padding:12px 18px;border-radius:var(--radius);font-size:14px;font-weight:500;text-align:center;opacity:0;transition:opacity .25s}
+.toast.show{opacity:1}
+.sync-indicator{font-size:11px;color:var(--text3);text-align:center;padding:4px;margin-top:-8px;margin-bottom:4px}
+/* PDF */
+.pdf-outer{background:#fff;color:#111;font-family:Georgia,'Times New Roman',serif;font-size:12px;line-height:1.6;padding:24px}
+.pdf-shop-hdr{text-align:center;border-bottom:2px solid #111;padding-bottom:12px;margin-bottom:14px}
+.pdf-shop-name{font-size:18px;font-weight:700}
+.pdf-shop-addr{font-size:11px;color:#555;margin-top:3px}
+.pdf-doc-title{text-align:center;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:3px}
+.pdf-doc-meta{text-align:center;font-size:11px;color:#666;margin-bottom:14px}
+.pdf-sec-hdr{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:#111;color:#fff;padding:4px 8px;margin:12px 0 0}
+.pdf-cv{border:1px solid #ccc}
+.pdf-cv-row{display:flex;padding:5px 8px;border-bottom:1px solid #eee;font-size:11px}
+.pdf-cv-row:last-child{border-bottom:none}
+.pdf-cv-lbl{color:#555;font-weight:700;width:88px;flex-shrink:0}
+.pdf-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.pdf-tbl th{background:#f0f0f0;padding:5px 7px;border:1px solid #ccc;font-weight:700;text-align:left}
+.pdf-tbl td{padding:5px 7px;border:1px solid #ccc}
+.pdf-tbl .sub-row td{font-weight:700;background:#f8f8f8}
+.pdf-totals{border:1px solid #ccc;margin-top:14px}
+.pdf-tot{display:flex;justify-content:space-between;padding:5px 10px;border-bottom:1px solid #eee;font-size:12px}
+.pdf-tot:last-child{border-bottom:none;font-weight:700;font-size:13px}
+.pdf-sig{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:24px}
+.pdf-sig-line{border-top:1px solid #555;padding-top:4px;font-size:10px;color:#555;margin-top:30px}
+.pdf-footer{margin-top:14px;font-size:10px;color:#aaa;text-align:center;border-top:1px solid #eee;padding-top:10px}
+@media print{
+  .topbar,.bottomnav,.toast-wrap,.btn-full,.no-print,.sync-indicator{display:none!important}
+  body{max-width:100%;background:#fff}
+  .scroll-area{padding-bottom:0}
+  .pdf-outer{padding:0}
+}
+</style>
+</head>
+<body>
+
+<div id="topbar-slot"></div>
+<div class="scroll-area" id="main"><div class="loading"><div class="spinner"></div>Loading jobs...</div></div>
+<div class="toast-wrap"><div class="toast" id="toast"></div></div>
+<div class="bottomnav">
+  <div class="bnav-item active" id="bn-jobs" onclick="nav('jobs')">
+    <svg class="bnav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+    <span class="bnav-label">Jobs</span>
+  </div>
+  <div class="bnav-item" id="bn-new" onclick="startNew()">
+    <svg class="bnav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    <span class="bnav-label">New</span>
+  </div>
+  <div class="bnav-item" id="bn-audit" onclick="nav('audit')">
+    <svg class="bnav-icon" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+    <span class="bnav-label">Audit</span>
+    <span class="bnav-dot" id="audit-dot"></span>
+  </div>
+</div>
+
+<script>
+const SHOP_NAME = "Auto Body Shop";
+const SHOP_ADDR = "123 Main St \u2022 City, ST 00000 \u2022 (555) 000-0000";
+const SHOP_FOOTER = "This estimate is valid for 30 days. All prices are subject to change based on final inspection. Tax not included.";
+const STATUSES = ["Estimate","In Progress","Awaiting Parts","Ready","Closed"];
+const DAMAGE_LEVELS = ["Minor","Moderate","Severe","Total Loss"];
+const STEPS = ["Customer","Vehicle","Parts","Labor","Details"];
+
+let jobs = [];
+let curView = 'jobs';
+let editJob = null;
+let viewJob = null;
+let formStep = 0;
+let saving = false;
+
+// ── API calls ─────────────────────────────────────────────────────────────
+async function apiGet(path) {
+  const r = await fetch(path); if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+async function apiPost(path, body) {
+  const r = await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if (!r.ok) throw new Error(await r.text()); return r.json();
+}
+async function apiPut(path, body) {
+  const r = await fetch(path,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  if (!r.ok) throw new Error(await r.text()); return r.json();
+}
+async function apiPatch(path) {
+  const r = await fetch(path,{method:'PATCH'}); if (!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function pTotal(j){return j.parts.reduce((a,p)=>a+(+p.qty||0)*(+p.price||0),0);}
+function lTotal(j){return j.labor.reduce((a,l)=>a+(+l.hours||0)*(+l.rate||0),0);}
+function gTotal(j){return pTotal(j)+lTotal(j);}
+function fmt(n){return '$'+(+n).toFixed(2);}
+function esc(s){if(!s)return'';return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function showToast(msg,dur=2400){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),dur);
+}
+
+function updAuditDot(){
+  const n=jobs.filter(j=>j.flags&&j.flags.some(f=>f.status==='active')).length;
+  const d=document.getElementById('audit-dot');
+  if(d) d.style.display=n?'block':'none';
+}
+
+function setBottomNav(v){
+  ['jobs','new','audit'].forEach(k=>{
+    const el=document.getElementById('bn-'+k);
+    if(el) el.classList.toggle('active',k===v||(v==='form'&&k==='new'));
+  });
+}
+
+function setTopbar(title,backFn,actionLabel,actionFn,actionDisabled=false){
+  const slot=document.getElementById('topbar-slot');
+  if(!title){slot.innerHTML='';return;}
+  const back=backFn?`<div class="topbar-back" onclick="${backFn}">&#8249;</div>`:'<div style="width:36px"></div>';
+  const act=actionLabel?`<div class="topbar-action${actionDisabled?' disabled':''}" onclick="${actionFn}">${actionLabel}</div>`:'<div style="width:60px"></div>';
+  slot.innerHTML=`<div class="topbar">${back}<div class="topbar-title">${esc(title)}</div>${act}</div>`;
+}
+
+// ── Navigation ─────────────────────────────────────────────────────────────
+async function nav(v){
+  curView=v; setBottomNav(v);
+  const m=document.getElementById('main');
+  if(v==='jobs'){
+    setTopbar(null);
+    m.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';
+    try{
+      jobs=await apiGet('/api/jobs');
+      m.innerHTML=renderJobs();
+    }catch(e){m.innerHTML='<div class="empty">Could not load jobs. Check connection.</div>';}
+    updAuditDot();
+  } else if(v==='audit'){
+    setTopbar('Audit dashboard',null,null,null);
+    m.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';
+    try{
+      jobs=await apiGet('/api/jobs');
+      m.innerHTML=renderAudit();
+    }catch(e){m.innerHTML='<div class="empty">Could not load jobs.</div>';}
+    updAuditDot();
+  }
+}
+
+// ── Job list ────────────────────────────────────────────────────────────────
+function renderJobs(){
+  const rows=jobs.map(j=>{
+    const af=(j.flags||[]).filter(f=>f.status==='active');
+    const sc={Estimate:'b-blue','In Progress':'b-amber','Awaiting Parts':'b-amber',Ready:'b-green',Closed:'b-gray'}[j.status]||'b-gray';
+    return `<div class="row" onclick="openJob('${esc(j.id)}')">
+      <div class="row-main">
+        <div class="row-title">${esc(j.customer.name)||'(no name)'}</div>
+        <div class="row-sub">${esc(j.id)} &bull; ${esc(j.vehicle.year)} ${esc(j.vehicle.make)} ${esc(j.vehicle.model)}</div>
+      </div>
+      <div class="row-right">
+        <span class="badge ${sc}">${esc(j.status)}</span>
+        ${af.length?`<span class="badge b-red">${af.length} flag${af.length>1?'s':''}</span>`:''}
+        <span style="font-size:14px;font-weight:700">${fmt(gTotal(j))}</span>
+      </div>
+      <span class="chevron">&#8250;</span>
+    </div>`;
+  }).join('');
+  return `<div style="padding:16px 16px 4px">
+    <div style="font-size:24px;font-weight:700;margin-bottom:12px">Jobs</div>
+    <div style="padding:0 0 12px"><input class="search-input" placeholder="Search jobs..." oninput="filterList(this.value)"></div>
+    <div class="sync-indicator" id="sync-info">Synced &bull; shared across all devices</div>
+  </div>
+  <div class="card" id="job-list">${rows||'<div class="empty">No jobs yet. Tap + to create one.</div>'}</div>`;
+}
+
+function filterList(q){
+  document.querySelectorAll('#job-list .row').forEach(r=>{
+    r.style.display=r.innerText.toLowerCase().includes(q.toLowerCase())?'':'none';
+  });
+}
+
+// ── Job detail ──────────────────────────────────────────────────────────────
+function openJob(id){
+  viewJob=jobs.find(j=>j.id===id);
+  if(!viewJob)return;
+  curView='detail';
+  setTopbar(viewJob.id,"nav('jobs')",null,null);
+  document.getElementById('main').innerHTML=renderDetail();
+}
+
+function renderDetail(){
+  const j=viewJob;if(!j)return'';
+  const af=(j.flags||[]).filter(f=>f.status==='active');
+  const gt=gTotal(j),pt=pTotal(j),lt=lTotal(j);
+  const sc={Estimate:'b-blue','In Progress':'b-amber','Awaiting Parts':'b-amber',Ready:'b-green',Closed:'b-gray'}[j.status]||'b-gray';
+  const flags=af.map(f=>`<div class="flag-banner ${f.sev==='warning'?'warn':''}">
+    <div class="flag-type ${f.sev==='warning'?'warn':''}">${esc(f.type)}</div>
+    <div class="flag-msg">${esc(f.msg)}</div>
+  </div>`).join('');
+  return `<div class="form-pad">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px">
+      <span class="badge ${sc}">${esc(j.status)}</span>
+      ${af.length?`<span class="badge b-red">${af.length} flag${af.length>1?'s':''}</span>`:''}
+    </div>
+    <div style="font-size:22px;font-weight:700">${esc(j.customer.name)}</div>
+    <div style="font-size:14px;color:var(--text2);margin-bottom:16px">${esc(j.vehicle.year)} ${esc(j.vehicle.make)} ${esc(j.vehicle.model)} &bull; ${esc(j.date)}</div>
+    ${flags}
+  </div>
+  <div class="section-hdr">Customer</div>
+  <div class="card">
+    <div class="info-row"><span class="info-label">Phone</span><span class="info-val">${esc(j.customer.phone)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Email</span><span class="info-val" style="font-size:13px">${esc(j.customer.email)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Insurance</span><span class="info-val">${esc(j.insurance.company)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Claim #</span><span class="info-val">${esc(j.insurance.claim)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Adjuster</span><span class="info-val">${esc(j.insurance.adjuster)||'—'}</span></div>
+  </div>
+  <div class="section-hdr">Vehicle</div>
+  <div class="card">
+    <div class="info-row"><span class="info-label">VIN</span><span class="info-val" style="font-family:monospace;font-size:13px">${esc(j.vehicle.vin)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Color</span><span class="info-val">${esc(j.vehicle.color)||'—'}</span></div>
+    <div class="info-row"><span class="info-label">Damage level</span><span class="info-val"><span class="badge b-amber">${esc(j.vehicle.damageLevel)}</span></span></div>
+    <div class="info-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <span class="info-label">Description</span><span style="font-size:14px">${esc(j.vehicle.damage)||'—'}</span>
+    </div>
+  </div>
+  <div class="section-hdr">Parts</div>
+  <div class="card">
+    ${j.parts.map(p=>`<div class="info-row">
+      <span class="info-label" style="font-size:13px;flex:1">${esc(p.desc)}<br><span style="font-size:11px;color:var(--text3)">${esc(p.partNo)||''} &bull; qty ${p.qty}</span></span>
+      <span class="info-val" style="font-weight:600">${fmt((+p.qty)*(+p.price))}</span>
+    </div>`).join('')}
+    <div class="total-row" style="background:var(--bg2)"><span class="total-label">Parts subtotal</span><span>${fmt(pt)}</span></div>
+  </div>
+  <div class="section-hdr">Labor</div>
+  <div class="card">
+    ${j.labor.map(l=>`<div class="info-row">
+      <span class="info-label" style="font-size:13px;flex:1">${esc(l.desc)}<br><span style="font-size:11px;color:var(--text3)">${l.hours}h @ ${fmt(l.rate)}/hr</span></span>
+      <span class="info-val" style="font-weight:600">${fmt((+l.hours)*(+l.rate))}</span>
+    </div>`).join('')}
+    <div class="total-row" style="background:var(--bg2)"><span class="total-label">Labor subtotal</span><span>${fmt(lt)}</span></div>
+  </div>
+  <div class="card">
+    <div class="total-row"><span class="total-label">Parts</span><span>${fmt(pt)}</span></div>
+    <div class="total-row"><span class="total-label">Labor</span><span>${fmt(lt)}</span></div>
+    <div class="total-row"><span>Grand total</span><span>${fmt(gt)}</span></div>
+    ${j.estimate>0?`<div class="total-row"><span class="total-label">Estimate</span><span>${fmt(j.estimate)}</span></div>
+    <div class="total-row"><span class="total-label">Variance</span><span style="color:${gt-j.estimate>0?'var(--red)':'var(--green)'}">${gt-j.estimate>=0?'+':''}${fmt(gt-j.estimate)}</span></div>`:''}
+  </div>
+  <div class="form-pad">
+    <button class="btn-full btn-primary" onclick="openPDF('${esc(j.id)}')">View estimate PDF</button>
+    <button class="btn-full btn-ghost" onclick="openEdit('${esc(j.id)}')">Edit job</button>
+  </div>`;
+}
+
+// ── Multi-step form ─────────────────────────────────────────────────────────
+function startNew(){
+  editJob={id:null,date:new Date().toLocaleDateString(),
+    customer:{name:'',phone:'',email:''},
+    insurance:{company:'',claim:'',adjuster:''},
+    vehicle:{year:'',make:'',model:'',color:'',vin:'',damageLevel:'Moderate',damage:''},
+    parts:[{desc:'',partNo:'',qty:1,price:0}],
+    labor:[{desc:'',hours:0,rate:95}],
+    status:'Estimate',tech:'',target:'',estimate:0,notes:'',flags:[],auditLog:[]};
+  formStep=0;curView='form';setBottomNav('form');renderStep();
+}
+
+function openEdit(id){
+  editJob=JSON.parse(JSON.stringify(jobs.find(j=>j.id===id)));
+  formStep=0;curView='form';setBottomNav('form');renderStep();
+}
+
+function renderStep(){
+  const j=editJob;
+  const isEdit=!!(j.id&&jobs.some(jb=>jb.id===j.id));
+  const backAct=formStep>0?'prevStep()':"nav('jobs')";
+  const nextLabel=formStep<STEPS.length-1?'Next':(saving?'Saving...':'Save');
+  const nextAct=formStep<STEPS.length-1?'nextStep()':'saveJob()';
+  setTopbar(isEdit?'Edit: '+j.id:'New estimate',backAct,nextLabel,nextAct,saving);
+
+  const prog=`<div class="progress-bar">${STEPS.map((_,i)=>`<div class="progress-seg${i<=formStep?' done':''}"></div>`).join('')}</div>
+  <div class="progress-label">${STEPS[formStep]} (${formStep+1}/${STEPS.length})</div>`;
+
+  let body='';
+  if(formStep===0){
+    body=`<div class="form-pad">${prog}
+      <div class="form-group"><label>Customer name</label><input id="f-cname" value="${esc(j.customer.name)}" placeholder="Full name"></div>
+      <div class="form-group"><label>Phone</label><input id="f-phone" type="tel" value="${esc(j.customer.phone)}" placeholder="(555) 000-0000"></div>
+      <div class="form-group"><label>Email</label><input id="f-email" type="email" value="${esc(j.customer.email)}" placeholder="email@example.com"></div>
+      <div class="form-group"><label>Insurance company</label><input id="f-ins" value="${esc(j.insurance.company)}" placeholder="State Farm, Geico..."></div>
+      <div class="form-group"><label>Claim #</label><input id="f-claim" value="${esc(j.insurance.claim)}"></div>
+      <div class="form-group"><label>Adjuster name</label><input id="f-adj" value="${esc(j.insurance.adjuster)}"></div>
+    </div>`;
+  } else if(formStep===1){
+    body=`<div class="form-pad">${prog}
+      <div class="g2">
+        <div class="form-group"><label>Year</label><input id="f-yr" value="${esc(j.vehicle.year)}" placeholder="2021"></div>
+        <div class="form-group"><label>Make</label><input id="f-make" value="${esc(j.vehicle.make)}" placeholder="Honda"></div>
+      </div>
+      <div class="g2">
+        <div class="form-group"><label>Model</label><input id="f-model" value="${esc(j.vehicle.model)}" placeholder="Accord"></div>
+        <div class="form-group"><label>Color</label><input id="f-color" value="${esc(j.vehicle.color)}"></div>
+      </div>
+      <div class="form-group"><label>VIN</label><input id="f-vin" value="${esc(j.vehicle.vin)}" placeholder="17-character VIN" style="font-family:monospace"></div>
+      <div class="form-group"><label>Damage level</label><select id="f-dlvl">${DAMAGE_LEVELS.map(d=>`<option${j.vehicle.damageLevel===d?' selected':''}>${d}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Damage description</label><textarea id="f-dmg" placeholder="Describe the damage...">${esc(j.vehicle.damage)}</textarea></div>
+    </div>`;
+  } else if(formStep===2){
+    const pRows=j.parts.map((p,i)=>`<div class="line-item">
+      <div class="li-fields">
+        <input class="li-input" value="${esc(p.desc)}" oninput="editJob.parts[${i}].desc=this.value" placeholder="Part description">
+        <div class="li-row">
+          <input class="li-input" value="${esc(p.partNo)}" oninput="editJob.parts[${i}].partNo=this.value" placeholder="Part #">
+          <input class="li-input li-w70" type="number" value="${p.qty}" oninput="editJob.parts[${i}].qty=+this.value;updSubs()" placeholder="Qty">
+          <input class="li-input li-w70" type="number" value="${p.price}" oninput="editJob.parts[${i}].price=+this.value;updSubs()" placeholder="$">
+        </div>
+        <div class="li-total">Line: ${fmt((+p.qty)*(+p.price))}</div>
+      </div>
+      <div class="li-del" onclick="editJob.parts.splice(${i},1);renderStep()">&times;</div>
+    </div>`).join('');
+    body=`${prog}<div style="padding:0 16px 6px;font-size:15px;font-weight:600">Parts</div>
+    <div class="card">${pRows}</div>
+    <div class="add-btn" onclick="editJob.parts.push({desc:'',partNo:'',qty:1,price:0});renderStep()">+ Add part</div>
+    <div class="card"><div class="total-row"><span class="total-label">Parts subtotal</span><span id="pt-sub">${fmt(pTotal(j))}</span></div></div>`;
+  } else if(formStep===3){
+    const lRows=j.labor.map((l,i)=>`<div class="line-item">
+      <div class="li-fields">
+        <input class="li-input" value="${esc(l.desc)}" oninput="editJob.labor[${i}].desc=this.value" placeholder="Labor description">
+        <div class="li-row">
+          <input class="li-input li-w70" type="number" value="${l.hours}" step="0.5" oninput="editJob.labor[${i}].hours=+this.value;updSubs()" placeholder="Hrs">
+          <input class="li-input li-w70" type="number" value="${l.rate}" oninput="editJob.labor[${i}].rate=+this.value;updSubs()" placeholder="$/hr">
+        </div>
+        <div class="li-total">Line: ${fmt((+l.hours)*(+l.rate))}</div>
+      </div>
+      <div class="li-del" onclick="editJob.labor.splice(${i},1);renderStep()">&times;</div>
+    </div>`).join('');
+    body=`${prog}<div style="padding:0 16px 6px;font-size:15px;font-weight:600">Labor</div>
+    <div class="card">${lRows}</div>
+    <div class="add-btn" onclick="editJob.labor.push({desc:'',hours:0,rate:95});renderStep()">+ Add labor</div>
+    <div class="card">
+      <div class="total-row"><span class="total-label">Labor subtotal</span><span id="lt-sub">${fmt(lTotal(j))}</span></div>
+      <div class="total-row"><span>Grand total</span><span id="gt-sub">${fmt(gTotal(j))}</span></div>
+    </div>`;
+  } else if(formStep===4){
+    body=`<div class="form-pad">${prog}
+      <div class="form-group"><label>Status</label><select id="f-status">${STATUSES.map(s=>`<option${j.status===s?' selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="form-group"><label>Technician</label><input id="f-tech" value="${esc(j.tech)}" placeholder="Assigned tech name"></div>
+      <div class="form-group"><label>Target completion date</label><input type="date" id="f-target" value="${esc(j.target)}"></div>
+      <div class="form-group"><label>Original estimate ($)</label><input type="number" id="f-est" value="${j.estimate||0}"></div>
+      <div class="form-group"><label>Internal notes (not on PDF)</label><textarea id="f-notes" placeholder="Internal use only...">${esc(j.notes)}</textarea></div>
+    </div>`;
+  }
+  document.getElementById('main').innerHTML=body;
+}
+
+function updSubs(){
+  const ps=document.getElementById('pt-sub');if(ps)ps.textContent=fmt(pTotal(editJob));
+  const ls=document.getElementById('lt-sub');if(ls)ls.textContent=fmt(lTotal(editJob));
+  const gs=document.getElementById('gt-sub');if(gs)gs.textContent=fmt(gTotal(editJob));
+}
+
+function gatherStep(){
+  const g=id=>document.getElementById(id)?.value||'';
+  if(formStep===0){
+    editJob.customer={name:g('f-cname'),phone:g('f-phone'),email:g('f-email')};
+    editJob.insurance={company:g('f-ins'),claim:g('f-claim'),adjuster:g('f-adj')};
+  } else if(formStep===1){
+    editJob.vehicle={...editJob.vehicle,year:g('f-yr'),make:g('f-make'),model:g('f-model'),color:g('f-color'),vin:g('f-vin'),damageLevel:g('f-dlvl'),damage:g('f-dmg')};
+  } else if(formStep===4){
+    editJob.status=g('f-status');editJob.tech=g('f-tech');editJob.target=g('f-target');
+    editJob.estimate=parseFloat(g('f-est'))||0;editJob.notes=g('f-notes');
+  }
+}
+
+function nextStep(){gatherStep();formStep++;renderStep();}
+function prevStep(){gatherStep();formStep--;renderStep();}
+
+async function saveJob(){
+  if(saving)return;
+  gatherStep();saving=true;renderStep();
+  try{
+    const isEdit=!!(editJob.id&&jobs.some(j=>j.id===editJob.id));
+    const saved=isEdit
+      ?await apiPut('/api/jobs/'+editJob.id,editJob)
+      :await apiPost('/api/jobs',editJob);
+    const af=(saved.flags||[]).filter(f=>f.status==='active').length;
+    showToast(af?'Saved — '+af+' flag'+(af>1?'s':'')+' raised':'Saved — '+saved.id);
+    editJob=null;saving=false;
+    await nav('jobs');
+  }catch(e){
+    saving=false;showToast('Save failed — check connection',3000);renderStep();
+  }
+}
+
+// ── Audit ───────────────────────────────────────────────────────────────────
+function renderAudit(){
+  const flagged=jobs.filter(j=>j.flags&&j.flags.some(f=>f.status==='active'));
+  const crit=flagged.filter(j=>j.flags.some(f=>f.status==='active'&&f.sev==='critical')).length;
+  const warn=flagged.filter(j=>j.flags.some(f=>f.status==='active'&&f.sev==='warning')).length;
+  const cards=flagged.map(j=>{
+    const af=j.flags.filter(f=>f.status==='active');
+    const flags=af.map(f=>`<div class="flag-banner ${f.sev==='warning'?'warn':''}">
+      <div class="flag-type ${f.sev==='warning'?'warn':''}">${esc(f.type)}</div>
+      <div class="flag-msg">${esc(f.msg)}</div>
+    </div>`).join('');
+    const last=j.auditLog&&j.auditLog.slice(-1)[0];
+    return `<div class="card">
+      <div class="card-pad" style="border-bottom:1px solid var(--border)">
+        <div style="font-size:15px;font-weight:600;margin-bottom:2px">${esc(j.id)} — ${esc(j.customer.name)}</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">${esc(j.vehicle.year)} ${esc(j.vehicle.make)} ${esc(j.vehicle.model)}</div>
+        ${flags}
+        ${last?`<div style="font-size:11px;color:var(--text3);margin-top:8px">Last: ${esc(last.action)} &bull; ${esc(last.ts)}</div>`:''}
+      </div>
+      <div class="resolve-row">
+        <div class="resolve-btn" onclick="resolveAll('${esc(j.id)}')">Resolve all</div>
+        <div class="resolve-btn" onclick="openEdit('${esc(j.id)}')">Edit job</div>
+        <div class="resolve-btn" onclick="openJob('${esc(j.id)}')">View</div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<div class="metric-grid">
+    <div class="metric"><div class="metric-label">Flagged jobs</div><div class="metric-value">${flagged.length}</div></div>
+    <div class="metric"><div class="metric-label">Critical</div><div class="metric-value r">${crit}</div></div>
+    <div class="metric"><div class="metric-label">Warnings</div><div class="metric-value a">${warn}</div></div>
+    <div class="metric"><div class="metric-label">Clear</div><div class="metric-value g">${jobs.length-flagged.length}</div></div>
+  </div>
+  <div class="sync-indicator" style="margin:0 16px 8px">Live data &bull; shared across all devices</div>
+  ${flagged.length?cards:'<div class="empty">No flagged jobs — all clear</div>'}`;
+}
+
+async function resolveAll(id){
+  try{
+    const updated=await apiPatch('/api/jobs/'+id+'/resolve');
+    const idx=jobs.findIndex(j=>j.id===id);
+    if(idx>=0)jobs[idx]=updated;
+    showToast('Resolved — '+id);
+    nav('audit');
+  }catch(e){showToast('Failed — check connection',3000);}
+}
+
+// ── PDF ─────────────────────────────────────────────────────────────────────
+function openPDF(id){
+  viewJob=jobs.find(j=>j.id===id);
+  if(!viewJob)return;
+  curView='pdf';
+  setTopbar('Estimate PDF',"openJob('"+esc(id)+"')",null,null);
+  document.getElementById('main').innerHTML=renderPDF(viewJob)+
+    `<div class="form-pad no-print"><button class="btn-full btn-ghost" onclick="window.print()">Print / Save as PDF</button></div>`;
+}
+
+function renderPDF(j){
+  const pt=pTotal(j),lt=lTotal(j),gt=gTotal(j);
+  const pr=j.parts.map(p=>`<tr><td>${esc(p.desc)}</td><td>${esc(p.partNo)||'—'}</td><td>${p.qty}</td><td>${fmt(p.price)}</td><td>${fmt((+p.qty)*(+p.price))}</td></tr>`).join('');
+  const lr=j.labor.map(l=>`<tr><td>${esc(l.desc)}</td><td>${l.hours}</td><td>${fmt(l.rate)}</td><td>${fmt((+l.hours)*(+l.rate))}</td></tr>`).join('');
+  return `<div class="pdf-outer">
+    <div class="pdf-shop-hdr"><div class="pdf-shop-name">${esc(SHOP_NAME)}</div><div class="pdf-shop-addr">${esc(SHOP_ADDR)}</div></div>
+    <div class="pdf-doc-title">Repair Estimate</div>
+    <div class="pdf-doc-meta">${esc(j.id)} &bull; ${esc(j.date)}</div>
+    <div class="pdf-sec-hdr">Customer &amp; Vehicle</div>
+    <div class="pdf-cv">
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Customer</span><span>${esc(j.customer.name)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Phone</span><span>${esc(j.customer.phone)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Email</span><span>${esc(j.customer.email)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Insurance</span><span>${esc(j.insurance.company)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Claim #</span><span>${esc(j.insurance.claim)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Adjuster</span><span>${esc(j.insurance.adjuster)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Vehicle</span><span>${esc(j.vehicle.year)} ${esc(j.vehicle.make)} ${esc(j.vehicle.model)}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Color</span><span>${esc(j.vehicle.color)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">VIN</span><span style="font-family:monospace">${esc(j.vehicle.vin)||'—'}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Damage Level</span><span>${esc(j.vehicle.damageLevel)}</span></div>
+      <div class="pdf-cv-row"><span class="pdf-cv-lbl">Description</span><span>${esc(j.vehicle.damage)||'—'}</span></div>
+    </div>
+    <div class="pdf-sec-hdr">Parts</div>
+    <table class="pdf-tbl"><thead><tr><th>Description</th><th>Part #</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+    <tbody>${pr}</tbody>
+    <tfoot><tr class="sub-row"><td colspan="4">Parts Subtotal</td><td>${fmt(pt)}</td></tr></tfoot></table>
+    <div class="pdf-sec-hdr">Labor</div>
+    <table class="pdf-tbl"><thead><tr><th>Description</th><th>Hours</th><th>Rate/hr</th><th>Total</th></tr></thead>
+    <tbody>${lr}</tbody>
+    <tfoot><tr class="sub-row"><td colspan="3">Labor Subtotal</td><td>${fmt(lt)}</td></tr></tfoot></table>
+    <div class="pdf-totals">
+      <div class="pdf-tot"><span>Parts</span><span>${fmt(pt)}</span></div>
+      <div class="pdf-tot"><span>Labor</span><span>${fmt(lt)}</span></div>
+      <div class="pdf-tot"><span>Grand Total</span><span>${fmt(gt)}</span></div>
+    </div>
+    <div class="pdf-sig">
+      <div><div class="pdf-sig-line">Customer Authorization &amp; Date</div></div>
+      <div><div class="pdf-sig-line">Shop Representative &amp; Date</div></div>
+    </div>
+    <div class="pdf-footer">${esc(SHOP_FOOTER)}</div>
+  </div>`;
+}
+
+nav('jobs');
+</script>
+</body>
+</html>
